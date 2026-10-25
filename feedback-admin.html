@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>牌垒 · 反馈查看</title>
+  <style>
+    :root {
+      --bg: #0d1017;
+      --panel: #161b29;
+      --border: #2a3149;
+      --text: #e6e9f2;
+      --muted: #8a93ad;
+      --accent: #5b8cff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      padding: 24px;
+    }
+    header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap; }
+    h1 { font-size: 20px; margin: 0; }
+    .count { color: var(--muted); font-size: 13px; }
+    button {
+      background: #232941;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #2c3350; }
+    #list { display: flex; flex-direction: column; gap: 10px; max-width: 780px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .meta { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .content { font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+    .empty, .error { color: var(--muted); padding: 30px 0; text-align: center; }
+    .error { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📮 牌垒 · 玩家反馈查看</h1>
+    <span class="count" id="count"></span>
+    <button onclick="load()">🔄 刷新</button>
+  </header>
+  <div id="list"><div class="empty">加载中…</div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+  <script>
+    // 云服务 publicConfig（与应用 src/cloud.ts 一致）
+    const cloud = WorkBuddyCloud.createWorkBuddyCloud({
+      endpoint: 'https://pailei-game.app.workbuddy.host',
+      oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
+      publishableKey: 'wbpk_mkPCkX1uz35bDbxq3Bk0L4_Usa89nQNWnUYnpKk6RxR4VhQPoV7D8iV',
+    });
+
+    function fmtTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString('zh-CN', { hour12: false });
+    }
+
+    async function load() {
+      const list = document.getElementById('list');
+      const countEl = document.getElementById('count');
+      try {
+        const { data, error, count } = await cloud.database
+          .from('feedback')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .limit(200);
+        if (error) { throw error; }
+        countEl.textContent = '共 ' + (count ?? data.length) + ' 条';
+        if (!data.length) {
+          list.innerHTML = '<div class="empty">暂无反馈</div>';
+          return;
+        }
+        list.innerHTML = data
+          .map(
+            (row) =>
+              '<div class="card"><div class="meta">#' + row.id + ' · ' +
+              fmtTime(row.created_at) + (row.page ? ' · ' + row.page : '') +
+              '</div><div class="content"></div></div>',
+          )
+          .join('');
+        // 用 textContent 写入内容，防 XSS
+        const cards = list.querySelectorAll('.card');
+        data.forEach((row, i) => {
+          cards[i].querySelector('.content').textContent = row.content;
+        });
+      } catch (e) {
+        list.innerHTML = '<div class="error">加载失败：' + (e && e.message ? e.message : '未知错误') + '</div>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
