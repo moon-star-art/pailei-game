@@ -6,8 +6,12 @@
 
 ## 在线游玩（推荐）
 
-- 官方链接：<https://pailei-game.app.workbuddy.host/?sharecode=LDFAXG3D2N>
+- 官方链接（**请连同末尾的分享码一起复制**）：<https://pailei-game.app.workbuddy.host/?sharecode=LDFAXG3D2N>
 - GitHub Pages 镜像：<https://moon-star-art.github.io/pailei-game/>
+
+> ⚠️ 官方地址必须带上 `?sharecode=LDFAXG3D2N` 才能打开，去掉分享码直接访问会返回 403。
+>
+> 两个地址的区别：**联机对战只能在官方链接里用**（云端服务按来源域名放行，镜像站会被拒绝）；单机游玩两边都一样。
 
 ## 下载到本地游玩
 
